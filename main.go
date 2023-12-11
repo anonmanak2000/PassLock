@@ -20,8 +20,9 @@ const UserFile = "users.json"
 
 type EncryptedPasswordEntry struct {
 	Tag    string `json:"tag"`
-	Nonce  [24]byte
 	Cipher []byte
+	Username string
+	Nonce *[24]byte
 }
 
 type User struct {
@@ -48,7 +49,7 @@ func (pm *PasswordManager) hashPassword(password string) (string, error) {
 }
 
 func (pm *PasswordManager) createUser() error {
-	fmt.Print("Enter your password: ")
+	fmt.Print("Enter password for passlock: ")
 	password, err := readPassword()
 	if err != nil {
 		return err
@@ -111,7 +112,7 @@ func (pm *PasswordManager) authenticateUser() bool {
 	return true
 }
 
-func (pm *PasswordManager) createStrongPassword(tag string, password string, generate bool) error {
+func (pm *PasswordManager) createStrongPassword(tag, password, username string, generate bool) error {
 	if generate {
 		password = generateStrongPassword()
 		fmt.Printf("Generated strong password: %s\n", password)
@@ -127,8 +128,9 @@ func (pm *PasswordManager) createStrongPassword(tag string, password string, gen
 
 	entry := EncryptedPasswordEntry{
 		Tag:    tag,
-		Nonce:  *nonce,
 		Cipher: encryptedPassword,
+		Username: username,
+		Nonce: nonce,
 	}
 
 	err = pm.savePasswordEntry(entry)
@@ -285,7 +287,7 @@ func (pm *PasswordManager) getAllTags() {
 	}
 }
 
-func (pm *PasswordManager) addPasswordWithTag(tag string, password string) error {
+func (pm *PasswordManager) addPasswordWithTag(tag, password, username string) error {
 	if password == "" {
 		return fmt.Errorf("password is required")
 	}
@@ -298,8 +300,9 @@ func (pm *PasswordManager) addPasswordWithTag(tag string, password string) error
 
 	entry := EncryptedPasswordEntry{
 		Tag:    tag,
-		Nonce:  *nonce,
 		Cipher: encryptedPassword,
+		Username: username,
+		Nonce: nonce,
 	}
 
 	err = pm.savePasswordEntry(entry)
@@ -311,7 +314,7 @@ func (pm *PasswordManager) addPasswordWithTag(tag string, password string) error
 	return nil
 }
 
-func (pm *PasswordManager) updatePasswordWithTag(tag string, password string, generate bool) error {
+func (pm *PasswordManager) updatePasswordWithTag(tag, password, username string, generate bool) error {
 	if generate {
 		password = generateStrongPassword()
 		fmt.Printf("Generated strong password: %s\n", password)
@@ -327,8 +330,9 @@ func (pm *PasswordManager) updatePasswordWithTag(tag string, password string, ge
 
 	entry := EncryptedPasswordEntry{
 		Tag:    tag,
-		Nonce:  *nonce,
 		Cipher: encryptedPassword,
+		Username: username,
+		Nonce: nonce,
 	}
 
 	err = pm.savePasswordEntry(entry)
@@ -340,7 +344,7 @@ func (pm *PasswordManager) updatePasswordWithTag(tag string, password string, ge
 	return nil
 }
 
-func (pm *PasswordManager) deletePasswordWithTag(tag string) error {
+func (pm *PasswordManager) deletePasswordWithTag(tag,username string) error {
 	entries, err := pm.loadPasswordEntries()
 	if err != nil {
 		return err
@@ -350,7 +354,7 @@ func (pm *PasswordManager) deletePasswordWithTag(tag string) error {
 	deleted := false
 
 	for _, entry := range entries {
-		if entry.Tag == tag {
+		if entry.Tag == tag && entry.Username == username {
 			deleted = true
 			continue
 		}
@@ -370,7 +374,7 @@ func (pm *PasswordManager) deletePasswordWithTag(tag string) error {
 	return nil
 }
 
-func (pm *PasswordManager) getPasswordWithTag(tag string) {
+func (pm *PasswordManager) getPasswordWithTag(tag,username string) {
 	entries, err := pm.loadPasswordEntries()
 	if err != nil {
 		fmt.Println("Error getting password:", err)
@@ -378,7 +382,7 @@ func (pm *PasswordManager) getPasswordWithTag(tag string) {
 	}
 
 	for _, entry := range entries {
-		if entry.Tag == tag {
+		if entry.Tag == tag && entry.Username == username {
 			password, err := pm.decryptPassword(entry.Cipher, &entry.Nonce)
 			if err != nil {
 				fmt.Println("Error getting password:", err)
@@ -422,33 +426,38 @@ func generateStrongPassword() string {
 
 func generateNonce() *[24]byte {
 	var nonce [24]byte
+	_, err := rand.Read(nonce[:])
+	if err != nil {
+		fmt.Println("Error generating nonce:", err)
+		os.Exit(1)
+	}
 	return &nonce
 }
 
 func printUsage() {
 	fmt.Println("Usage:")
-	fmt.Println("  ./target/PassLock <username> <operation> [options]")
+	fmt.Println("passlock <operation> [options]")
 	fmt.Println("Operations:")
-	fmt.Println("  -create-strong-password <tag> [-password=<password> | -generate]")
-	fmt.Println("    - Create a strong password for the specified tag.")
-	fmt.Println("      Options:")
-	fmt.Println("        -password=<password>  Specify the password.")
-	fmt.Println("        -generate             Generate a strong password.")
-	fmt.Println("  -add-password <tag> -password=<password>")
-	fmt.Println("    - Add a password for the specified tag.")
-	fmt.Println("  -update-password <tag> [-password=<password> | -generate]")
-	fmt.Println("    - Update the password for the specified tag.")
-	fmt.Println("      Options:")
-	fmt.Println("        -password=<password>  Specify the new password.")
-	fmt.Println("        -generate             Generate a new strong password.")
-	fmt.Println("  -delete-password <tag>")
-	fmt.Println("    - Delete the password for the specified tag.")
-	fmt.Println("  -get-password <tag>")
-	fmt.Println("    - Get the password for the specified tag.")
-	fmt.Println("  -get-tags")
-	fmt.Println("    - Get all tags.")
-	fmt.Println("  -help")
-	fmt.Println("    - Display this help message.")
+	fmt.Println("-create-strong-password <tag> [-password=<password> | -generate]")
+	fmt.Println("	- Create a strong password for the specified tag.")
+	fmt.Println("	Options:")
+	fmt.Println("		-password=<password>  Specify the password.")
+	fmt.Println("		-generate             Generate a strong password.")
+	fmt.Println("-add-password <tag> -password=<password>")
+	fmt.Println("	- Add a password for the specified tag.")
+	fmt.Println("-update-password <tag> [-password=<password> | -generate]")
+	fmt.Println("	- Update the password for the specified tag.")
+	fmt.Println("	Options:")
+	fmt.Println("		-password=<password>  Specify the new password.")
+	fmt.Println("		-generate             Generate a new strong password.")
+	fmt.Println("-delete-password <tag>")
+	fmt.Println("	- Delete the password for the specified tag.")
+	fmt.Println("-get-password <tag>")
+	fmt.Println("	- Get the password for the specified tag.")
+	fmt.Println("-get-tags")
+	fmt.Println("	- Get all tags.")
+	fmt.Println("-help")
+	fmt.Println("	- Display this help message.")
 }
 
 func main() {
@@ -484,9 +493,9 @@ func main() {
 		flagSet.StringVar(&tag, "tag", "", "Specify the tag.")
 		flagSet.StringVar(&password, "password", "", "Specify the password.")
 		flagSet.BoolVar(&generate, "generate", false, "Generate a strong password.")
-		flagSet.Parse(os.Args[3:])
+		flagSet.Parse(os.Args[2:])
 
-		err := pm.createStrongPassword(tag, password, generate)
+		err := pm.createStrongPassword(tag, password, username, generate)
 		if err != nil {
 			fmt.Println("Error:", err)
 		}
@@ -498,7 +507,7 @@ func main() {
 		flagSet.StringVar(&password, "password", "", "Specify the password.")
 		flagSet.Parse(os.Args[2:])
 
-		err := pm.addPasswordWithTag(tag, password)
+		err := pm.addPasswordWithTag(tag, password, username)
 		if err != nil {
 			fmt.Println("Error:", err)
 		}
@@ -512,7 +521,7 @@ func main() {
 		flagSet.BoolVar(&generate, "generate", false, "Generate a new strong password.")
 		flagSet.Parse(os.Args[2:])
 
-		err := pm.updatePasswordWithTag(tag, password, generate)
+		err := pm.updatePasswordWithTag(tag, password, username, generate)
 		if err != nil {
 			fmt.Println("Error:", err)
 		}
@@ -522,7 +531,7 @@ func main() {
 		flagSet.StringVar(&tag, "tag", "", "Specify the tag.")
 		flagSet.Parse(os.Args[2:])
 
-		err := pm.deletePasswordWithTag(tag)
+		err := pm.deletePasswordWithTag(tag,username)
 		if err != nil {
 			fmt.Println("Error:", err)
 		}
@@ -533,11 +542,10 @@ func main() {
 		flagSet.StringVar(&tag, "tag", "", "Specify the tag.")
 		flagSet.Parse(os.Args[2:])
 
-		pm.getPasswordWithTag(tag)
+		pm.getPasswordWithTag(tag,username)
 	case "-get-tags":
 		pm.getAllTags()
 	default:
 		fmt.Println("Invalid operation. Please use -help command to see all options.")
-		//printUsage()
 	}
 }

@@ -1,4 +1,4 @@
-Binary_Name=PassLock
+Binary_Name=passlock
 
 build:
 	go build -o ./target/${Binary_Name}.exe main.go
