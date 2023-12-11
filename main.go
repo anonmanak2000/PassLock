@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"math/big"
 	"os"
 	"strings"
 
@@ -19,10 +20,10 @@ const KeyFile = "secret.key"
 const UserFile = "users.json"
 
 type EncryptedPasswordEntry struct {
-	Tag    string `json:"tag"`
-	Cipher []byte
+	Tag      string `json:"tag"`
+	Cipher   []byte
 	Username string
-	Nonce *[24]byte
+	Nonce    [24]byte
 }
 
 type User struct {
@@ -114,8 +115,14 @@ func (pm *PasswordManager) authenticateUser() bool {
 
 func (pm *PasswordManager) createStrongPassword(tag, password, username string, generate bool) error {
 	if generate {
-		password = generateStrongPassword()
-		fmt.Printf("Generated strong password: %s\n", password)
+		strongpasword, err := generateStrongPassword()
+		if err != nil {
+			fmt.Printf("Error while generating strong password. \n")
+			return err
+		}
+		password = strongpasword
+		fmt.Printf("Generated strong password: %s\n", strongpasword)
+
 	} else if password == "" {
 		return fmt.Errorf("password is required")
 	}
@@ -127,10 +134,10 @@ func (pm *PasswordManager) createStrongPassword(tag, password, username string, 
 	}
 
 	entry := EncryptedPasswordEntry{
-		Tag:    tag,
-		Cipher: encryptedPassword,
+		Tag:      tag,
+		Cipher:   encryptedPassword,
 		Username: username,
-		Nonce: nonce,
+		Nonce:    *nonce,
 	}
 
 	err = pm.savePasswordEntry(entry)
@@ -299,10 +306,10 @@ func (pm *PasswordManager) addPasswordWithTag(tag, password, username string) er
 	}
 
 	entry := EncryptedPasswordEntry{
-		Tag:    tag,
-		Cipher: encryptedPassword,
+		Tag:      tag,
+		Cipher:   encryptedPassword,
 		Username: username,
-		Nonce: nonce,
+		Nonce:    *nonce,
 	}
 
 	err = pm.savePasswordEntry(entry)
@@ -316,8 +323,14 @@ func (pm *PasswordManager) addPasswordWithTag(tag, password, username string) er
 
 func (pm *PasswordManager) updatePasswordWithTag(tag, password, username string, generate bool) error {
 	if generate {
-		password = generateStrongPassword()
-		fmt.Printf("Generated strong password: %s\n", password)
+		strongpassword, err := generateStrongPassword()
+		if err != nil {
+			fmt.Printf("Error while generating strong password. \n")
+			return err
+		}
+		password = strongpassword
+		fmt.Printf("Generated strong password: %s\n", strongpassword)
+
 	} else if password == "" {
 		return fmt.Errorf("password is required")
 	}
@@ -329,10 +342,10 @@ func (pm *PasswordManager) updatePasswordWithTag(tag, password, username string,
 	}
 
 	entry := EncryptedPasswordEntry{
-		Tag:    tag,
-		Cipher: encryptedPassword,
+		Tag:      tag,
+		Cipher:   encryptedPassword,
 		Username: username,
-		Nonce: nonce,
+		Nonce:    *nonce,
 	}
 
 	err = pm.savePasswordEntry(entry)
@@ -344,7 +357,7 @@ func (pm *PasswordManager) updatePasswordWithTag(tag, password, username string,
 	return nil
 }
 
-func (pm *PasswordManager) deletePasswordWithTag(tag,username string) error {
+func (pm *PasswordManager) deletePasswordWithTag(tag, username string) error {
 	entries, err := pm.loadPasswordEntries()
 	if err != nil {
 		return err
@@ -374,7 +387,7 @@ func (pm *PasswordManager) deletePasswordWithTag(tag,username string) error {
 	return nil
 }
 
-func (pm *PasswordManager) getPasswordWithTag(tag,username string) {
+func (pm *PasswordManager) getPasswordWithTag(tag, username string) {
 	entries, err := pm.loadPasswordEntries()
 	if err != nil {
 		fmt.Println("Error getting password:", err)
@@ -418,10 +431,20 @@ func readPassword() (string, error) {
 	return strings.TrimSpace(string(password)), nil
 }
 
-func generateStrongPassword() string {
-	// Implement your logic to generate a strong password
-	// For simplicity, a static password is returned in this example.
-	return "GeneratedStrongPassword123!"
+func generateStrongPassword() (string, error) {
+	const length = 32
+	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()-_=+[]{}|;:'\",.<>/?`~"
+	password := make([]byte, length)
+
+	for i := range password {
+		randomIndex, err := rand.Int(rand.Reader, big.NewInt(int64(len(charset))))
+		if err != nil {
+			return "", err
+		}
+		password[i] = charset[randomIndex.Int64()]
+	}
+
+	return string(password), nil
 }
 
 func generateNonce() *[24]byte {
@@ -531,7 +554,7 @@ func main() {
 		flagSet.StringVar(&tag, "tag", "", "Specify the tag.")
 		flagSet.Parse(os.Args[2:])
 
-		err := pm.deletePasswordWithTag(tag,username)
+		err := pm.deletePasswordWithTag(tag, username)
 		if err != nil {
 			fmt.Println("Error:", err)
 		}
@@ -542,7 +565,7 @@ func main() {
 		flagSet.StringVar(&tag, "tag", "", "Specify the tag.")
 		flagSet.Parse(os.Args[2:])
 
-		pm.getPasswordWithTag(tag,username)
+		pm.getPasswordWithTag(tag, username)
 	case "-get-tags":
 		pm.getAllTags()
 	default:
