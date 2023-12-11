@@ -21,4 +21,4 @@
 go.work
 
 #Ignore Target Folder
-./target
+./target/*
