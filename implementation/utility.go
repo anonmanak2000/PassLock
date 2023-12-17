@@ -12,6 +12,19 @@ import (
 	"golang.org/x/term"
 )
 
+// TermReader interface wraps the ReadPassword method.
+type TermReader interface {
+	ReadPassword(fd int) ([]byte, error)
+}
+
+// realTermReader implements the TermReader interface using the actual term package.
+type realTermReader struct{}
+
+// ReadPassword is the implementation of TermReader.ReadPassword using the real term package.
+func (r *realTermReader) ReadPassword(fd int) ([]byte, error) {
+	return term.ReadPassword(fd)
+}
+
 // Read Username from CLI
 func ReadUserName() (string, error) {
 	fmt.Printf("Enter Username: ")
@@ -25,8 +38,9 @@ func ReadUserName() (string, error) {
 }
 
 // Read Password securely from CLI
-func readPassword() (string, error) {
-	password, err := term.ReadPassword(int(os.Stdin.Fd()))
+func readPassword(reader TermReader) (string, error) {
+
+	password, err := reader.ReadPassword(int(os.Stdin.Fd()))
 	if err != nil {
 		return "", err
 	}
@@ -167,7 +181,7 @@ func PrintUsage() {
 // Create a User password - First time using CLI
 func createUser(username string) error {
 	fmt.Print("Enter password for passlock: ")
-	password, err := readPassword()
+	password, err := readPassword(&realTermReader{})
 	if err != nil {
 		return err
 	}
@@ -217,7 +231,7 @@ func authenticateUser(username string) (bool, error) {
 	}
 
 	fmt.Printf("Enter your password for %s: ", username)
-	password, err := readPassword()
+	password, err := readPassword(&realTermReader{})
 	if err != nil {
 		return false, err
 	}

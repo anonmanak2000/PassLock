@@ -3,9 +3,6 @@ Binary_Name=passlock
 build:
 	go build -o ./target/${Binary_Name}.exe main.go
 
-test:
-	go test ./...
-
 run: build
 	./target/${Binary_Name}
 
@@ -14,7 +11,8 @@ clean:
 	rm -rf ./target
 
 test:
-	go test ./...
+	go clean
+	go test -count=1 ./implementation -v
 
 dep:
 	go mod download
