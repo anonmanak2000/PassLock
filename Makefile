@@ -12,10 +12,7 @@ clean:
 
 test:
 	go clean
-	go test -count=1 ./implementation -v
-
-dep:
-	go mod download
+	go test ./implementation -cover
 
 tidy:
 	go mod tidy	

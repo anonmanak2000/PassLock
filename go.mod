@@ -3,6 +3,7 @@ module github.com/anonmanak/PassLock
 go 1.20
 
 require (
+	bou.ke/monkey v1.0.2
 	github.com/stretchr/testify v1.8.4
 	golang.org/x/crypto v0.16.0
 	golang.org/x/term v0.15.0

@@ -61,10 +61,7 @@ func (pm *PasswordManager) AddPasswordWithTag(tag, password string, generate boo
 	}
 
 	nonce := generateNonce()
-	encryptedPassword, err := encryptPassword(password, nonce)
-	if err != nil {
-		return err
-	}
+	encryptedPassword := encryptPassword(password, nonce)
 
 	entry := EncryptedPasswordEntry{
 		Tag:      tag,
@@ -73,7 +70,7 @@ func (pm *PasswordManager) AddPasswordWithTag(tag, password string, generate boo
 		Nonce:    *nonce,
 	}
 
-	err = savePasswordEntry(entry)
+	err := savePasswordEntry(entry)
 	if err != nil {
 		return err
 	}
@@ -143,10 +140,7 @@ func (pm *PasswordManager) UpdatePasswordWithTag(tag, password string, generate 
 	}
 
 	nonce := generateNonce()
-	encryptedPassword, err := encryptPassword(password, nonce)
-	if err != nil {
-		return err
-	}
+	encryptedPassword := encryptPassword(password, nonce)
 
 	entry := EncryptedPasswordEntry{
 		Tag:      tag,
@@ -155,7 +149,7 @@ func (pm *PasswordManager) UpdatePasswordWithTag(tag, password string, generate 
 		Nonce:    *nonce,
 	}
 
-	err = savePasswordEntry(entry)
+	err := savePasswordEntry(entry)
 	if err != nil {
 		return err
 	}
