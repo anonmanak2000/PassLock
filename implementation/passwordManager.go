@@ -27,7 +27,7 @@ func NewPasswordManager() (*PasswordManager, error) {
 	authenticated, err := authenticateUser(username)
 
 	if err != nil {
-		fmt.Println("Error while reading password: ", err)
+		fmt.Println("Error: ", err)
 		return &PasswordManager{}, err
 	}
 

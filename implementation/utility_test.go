@@ -441,6 +441,33 @@ func TestPrintUsage(t *testing.T) {
 	PrintUsage()
 }
 
+// Test Is Duplicate method
+func TestIsDuplicate(t *testing.T) {
+
+	mockEmptyUser := make([]User, 2)
+
+	mockUser := User{
+		Username: "TestUsername",
+		Password: "TestPassword",
+	}
+
+	mockUsers := make([]User, 2)
+
+	mockUsers = append(mockUsers, mockUser)
+
+	t.Run("User doesn't exist", func(t *testing.T) {
+		isDuplicate := isDuplicate(mockEmptyUser, "TestUsername")
+
+		assert.False(t, isDuplicate)
+	})
+
+	t.Run("User already exists", func(t *testing.T) {
+		isDuplicate := isDuplicate(mockUsers, "TestUsername")
+
+		assert.True(t, isDuplicate)
+	})
+}
+
 // Test Create User method
 func TestCreateUser(t *testing.T) {
 	mockUserName := "TestUsername"
@@ -472,17 +499,27 @@ func TestCreateUser(t *testing.T) {
 		return errors.New("Error while saving users")
 	}
 
+	mockIsDuplicateFalse := func(users []User, username string) bool {
+		return false
+	}
+
+	mockIsDuplicateTrue := func(users []User, username string) bool {
+		return true
+	}
+
 	t.Run("Successfully Create User", func(t *testing.T) {
 		patchReadPassword := monkey.Patch(readPassword, mockReadPassword)
 		patchHashPassword := monkey.Patch(hashPassword, mockHashPassword)
 		patchLoadUsers := monkey.Patch(loadUsers, mockLoadUsers)
 		patchSaveUsers := monkey.Patch(saveUsers, mockSaveUsers)
+		patchIsDuplicateFalse := monkey.Patch(isDuplicate, mockIsDuplicateFalse)
 
 		defer func() {
 			patchReadPassword.Unpatch()
 			patchHashPassword.Unpatch()
 			patchLoadUsers.Unpatch()
 			patchSaveUsers.Unpatch()
+			patchIsDuplicateFalse.Unpatch()
 		}()
 
 		err := createUser(mockUserName)
@@ -491,9 +528,15 @@ func TestCreateUser(t *testing.T) {
 	})
 
 	t.Run("Error while reading password", func(t *testing.T) {
+		patchLoadUsers := monkey.Patch(loadUsers, mockLoadUsers)
 		patchErrorReadPassword := monkey.Patch(readPassword, mockErrorReadPassword)
+		patchIsDuplicateFalse := monkey.Patch(isDuplicate, mockIsDuplicateFalse)
 
-		defer patchErrorReadPassword.Unpatch()
+		defer func() {
+			patchIsDuplicateFalse.Unpatch()
+			patchErrorReadPassword.Unpatch()
+			patchLoadUsers.Unpatch()
+		}()
 
 		err := createUser(mockUserName)
 
@@ -501,13 +544,9 @@ func TestCreateUser(t *testing.T) {
 	})
 
 	t.Run("Error while loading users", func(t *testing.T) {
-		patchReadPassword := monkey.Patch(readPassword, mockReadPassword)
-		patchHashPassword := monkey.Patch(hashPassword, mockHashPassword)
 		patchErrorLoadUsers := monkey.Patch(loadUsers, mockErrorLoadUsers)
 
 		defer func() {
-			patchReadPassword.Unpatch()
-			patchHashPassword.Unpatch()
 			patchErrorLoadUsers.Unpatch()
 		}()
 
@@ -521,16 +560,31 @@ func TestCreateUser(t *testing.T) {
 		patchHashPassword := monkey.Patch(hashPassword, mockHashPassword)
 		patchLoadUsers := monkey.Patch(loadUsers, mockLoadUsers)
 		patchErrorSaveUsers := monkey.Patch(saveUsers, mockErrorSaveUsers)
+		patchIsDuplicateFalse := monkey.Patch(isDuplicate, mockIsDuplicateFalse)
 
 		defer func() {
 			patchReadPassword.Unpatch()
 			patchHashPassword.Unpatch()
 			patchLoadUsers.Unpatch()
 			patchErrorSaveUsers.Unpatch()
+			patchIsDuplicateFalse.Unpatch()
 		}()
 
 		err := createUser(mockUserName)
 
+		assert.Error(t, err)
+	})
+
+	t.Run("Dupplicate user", func(t *testing.T) {
+		patchLoadUsers := monkey.Patch(loadUsers, mockLoadUsers)
+		patchIsDuplicateTrue := monkey.Patch(isDuplicate, mockIsDuplicateTrue)
+
+		defer func() {
+			patchLoadUsers.Unpatch()
+			patchIsDuplicateTrue.Unpatch()
+		}()
+
+		err := createUser(mockUserName)
 		assert.Error(t, err)
 	})
 }

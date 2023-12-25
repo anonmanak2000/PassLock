@@ -2,6 +2,7 @@ package implementation
 
 import (
 	"crypto/rand"
+	"errors"
 	"fmt"
 	"math/big"
 	"os"
@@ -165,8 +166,32 @@ func PrintUsage() {
 	fmt.Println("Display this help message.")
 }
 
+// Check if user is duplicate
+func isDuplicate(users []User, username string) bool {
+	duplicateUser := false
+
+	for _, user := range users {
+		if user.Username == username {
+			duplicateUser = true
+			break
+		}
+	}
+
+	return duplicateUser
+}
+
 // Create a User password - First time using CLI
 func createUser(username string) error {
+
+	users, err := loadUsers()
+	if err != nil {
+		return err
+	}
+
+	if isDuplicate(users, username) {
+		return errors.New("User already exists")
+	}
+
 	fmt.Print("Enter password for passlock: ")
 	password, err := readPassword()
 	if err != nil {
@@ -181,11 +206,6 @@ func createUser(username string) error {
 	user := User{
 		Username: username,
 		Password: hashedPassword,
-	}
-
-	users, err := loadUsers()
-	if err != nil {
-		return err
 	}
 
 	users = append(users, user)
