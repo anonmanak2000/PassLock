@@ -1,14 +1,14 @@
 Binary_Name=passlock
 
 build:
-	go build -o ./target/${Binary_Name}.exe main.go
+	go build -o ./passlock/${Binary_Name}.exe main.go
 
 run: build
-	./target/${Binary_Name}
+	./passlock/${Binary_Name}
 
 clean:
 	go clean
-	rm -rf ./target
+	rm -rf ./passlock
 
 test:
 	go clean

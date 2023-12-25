@@ -42,8 +42,7 @@ Clone the repository and install the Passlock CLI on your machine.
 
 ```bash
 git clone https://github.com/anonmanak2000/PassLock.git
-cd PassLock
-make build
+cd passlock
 ```
 
 #### Create an Account
