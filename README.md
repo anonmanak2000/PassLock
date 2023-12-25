@@ -2,38 +2,6 @@
 
 Passlock is a Command Line Interface (CLI) based password manager designed to centralize password management for multiple users. It provides a secure and convenient way to manage and organize passwords for various tags.
 
-## Features
-
-- **Add Password**: Users can add passwords either by generating a new password or by providing a password for a specific tag.
-
-  ```bash
-  passlock -add-password -tag=<tag> (-password=<password>|-generate)
-  ```
-
-- **Update Password**: Users can udpate passwords either by generating a new password or by providing a password for a specific tag.
-
-  ```bash
-  passlock -update-password -tag=<tag> (-password=<password>|-generate)
-  ```
-
-- **Delete Password**: Users can delete passwords by providing specific tag.
-
-  ```bash
-  passlock -delete-password -tag=<tag>
-  ```
-
-- **Get Password**: Users can get passwords by providing specific tag.
-
-  ```bash
-  passlock -get-password -tag=<tag>
-  ```
-
-- **Get Tags**: Users can all tags.
-
-  ```bash
-  passlock -get-tags
-  ```
-
 ## Getting Started
 
 ### Install Passlock
@@ -71,3 +39,35 @@ Generating a Password
 ```bash
 passlock -add-password -tag=example -generate
 ```
+
+## Features
+
+- **Add Password**: Users can add passwords either by generating a new password or by providing a password for a specific tag.
+
+  ```bash
+  passlock -add-password -tag=<tag> (-password=<password>|-generate)
+  ```
+
+- **Update Password**: Users can udpate passwords either by generating a new password or by providing a password for a specific tag.
+
+  ```bash
+  passlock -update-password -tag=<tag> (-password=<password>|-generate)
+  ```
+
+- **Delete Password**: Users can delete passwords by providing specific tag.
+
+  ```bash
+  passlock -delete-password -tag=<tag>
+  ```
+
+- **Get Password**: Users can get passwords by providing specific tag.
+
+  ```bash
+  passlock -get-password -tag=<tag>
+  ```
+
+- **Get Tags**: Users can all tags.
+
+  ```bash
+  passlock -get-tags
+  ```
