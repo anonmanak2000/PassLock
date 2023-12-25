@@ -38,11 +38,12 @@ Passlock is a Command Line Interface (CLI) based password manager designed to ce
 
 ### Install Passlock
 
-Clone the repository and install the Passlock CLI on your machine.
+Clone the repository and install the Passlock CLI on your machine. A directory named **passlock** will be generated.
 
 ```bash
 git clone https://github.com/anonmanak2000/PassLock.git
-cd passlock
+cd PassLock
+make build
 ```
 
 #### Create an Account
