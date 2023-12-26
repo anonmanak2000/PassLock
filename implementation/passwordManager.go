@@ -1,6 +1,7 @@
 package implementation
 
 import (
+	"errors"
 	"fmt"
 )
 
@@ -51,12 +52,12 @@ func (pm *PasswordManager) AddPasswordWithTag(tag, password string, generate boo
 	entries, err := loadPasswordEntries()
 	if err != nil {
 		fmt.Println("Error:", err)
-		return
+		return err
 	}
 
 	for _, entry := range entries {
-		if entry.Tag == tag{
-			return errors.New("Tag already exists!!!")
+		if entry.Tag == tag {
+			return errors.New("tag already exists")
 		}
 	}
 
@@ -83,7 +84,7 @@ func (pm *PasswordManager) AddPasswordWithTag(tag, password string, generate boo
 		Nonce:    *nonce,
 	}
 
-	err := savePasswordEntry(entry)
+	err = savePasswordEntry(entry)
 	if err != nil {
 		return err
 	}
