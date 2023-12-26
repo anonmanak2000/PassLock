@@ -1,6 +1,7 @@
 package implementation
 
 import (
+	"errors"
 	"fmt"
 )
 
@@ -47,6 +48,19 @@ func NewPasswordManager() (*PasswordManager, error) {
 // Operations:
 // 1. Add Password With Tag
 func (pm *PasswordManager) AddPasswordWithTag(tag, password string, generate bool) error {
+
+	entries, err := loadPasswordEntries()
+	if err != nil {
+		fmt.Println("Error:", err)
+		return err
+	}
+
+	for _, entry := range entries {
+		if entry.Tag == tag {
+			return errors.New("tag already exists")
+		}
+	}
+
 	if generate {
 		strongpasword, err := generateStrongPassword()
 		if err != nil {
@@ -70,12 +84,11 @@ func (pm *PasswordManager) AddPasswordWithTag(tag, password string, generate boo
 		Nonce:    *nonce,
 	}
 
-	err := savePasswordEntry(entry)
+	err = savePasswordEntry(entry)
 	if err != nil {
 		return err
 	}
 
-	fmt.Println("Strong password created successfully.")
 	return nil
 }
 
