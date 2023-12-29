@@ -71,3 +71,9 @@ passlock -add-password -tag=example -generate
   ```bash
   passlock -get-tags
   ```
+
+- **Get Help**: Get to know about all the commands/flags supported by Passlock.
+
+```bash
+passlock -help
+```
